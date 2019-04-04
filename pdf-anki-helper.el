@@ -1,3 +1,38 @@
+;;; pdf-anki-helper.el --- a plugin that help you collect vocabulary for anki when reading pdf
+
+;; Copyright (C) 2019-2019 DarkSun <lujun9972@gmail.com>.
+
+;; Author: DarkSun <lujun9972@gmail.com>
+;; Keywords: lisp, anki, pdf, translator
+
+;; This file is NOT part of GNU Emacs.
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Source code
+;;
+;; pdf-anki-helper's code can be found here:
+;;   http://github.com/lujun9972/pdf-anki-helper.el
+
+;;; Commentary:
+
+;; pdf-anki-helper is a plugin that help you collect vocabulary for anki when reading pdf
+;; Just select the sentence then execute =M-x pah-search=
+
+
+;;; Code:
+
 (require 'pdf-view)
 (require 'youdao-dictionary)
 ;; (require 'AnkiConnect)
@@ -33,14 +68,14 @@
 (defvar pah-store-file "~/pdf-anki-helper.txt")
 
 (defun pah--get-active-region-text ()
-  "Get the region text"
+  "Get the region text."
   (pdf-view-assert-active-region)
   (let* ((txt (pdf-view-active-region-text))
          (txt (string-join txt "\n")))
     (replace-regexp-in-string "[\r\n]" " " txt)))
 
 (defun pah--select-word-in-string (str)
-  "Select word in `STR'"
+  "Select word in `STR'."
   (let ((words (split-string str "[ \f\t\n\r\v,.:]+")))
     (completing-read "请选择单词: " words)))
 
@@ -64,3 +99,5 @@
       (when (file-readable-p pah-store-file)
         (insert-file-contents pah-store-file))
       (insert (string-join `(,sentence ,expression ,translation ,glossary ,us-phonetic) "|") "\n"))))
+
+(provide 'pdf-anki-helper)
