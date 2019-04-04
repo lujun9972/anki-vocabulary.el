@@ -63,5 +63,4 @@
     (with-temp-file pah-store-file
       (when (file-readable-p pah-store-file)
         (insert-file-contents pah-store-file))
-      (insert (string-join `(,sentence ,expression ,translation ,glossary ,us-phonetic) "|")))
-    ))
+      (insert (string-join `(,sentence ,expression ,translation ,glossary ,us-phonetic) "|") "\n"))))
