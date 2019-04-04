@@ -4,6 +4,9 @@
 
 ;; Author: DarkSun <lujun9972@gmail.com>
 ;; Keywords: lisp, anki, pdf, translator
+;; Package: pdf-anki-helper
+;; Version: 1.0
+;; Package-Requires: ((emacs "24.3") (youdao-dictionary "20180714"))
 
 ;; This file is NOT part of GNU Emacs.
 
