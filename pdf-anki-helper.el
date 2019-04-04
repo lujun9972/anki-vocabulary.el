@@ -82,6 +82,7 @@
   (let ((words (split-string str "[ \f\t\n\r\v,.:]+")))
     (completing-read "请选择单词: " words)))
 
+;;;###autoload
 (defun pah-search ()
   (interactive)
   (let* ((sentence (pah--get-active-region-text))           ; 原句
