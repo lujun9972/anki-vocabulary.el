@@ -6,7 +6,7 @@
 ;; Keywords: lisp, anki, pdf, translator
 ;; Package: pdf-anki-helper
 ;; Version: 1.0
-;; Package-Requires: ((emacs "24.3") (youdao-dictionary "20180714"))
+;; Package-Requires: ((emacs "24.3") (youdao-dictionary "20180714") (AnkiConnect "1.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
