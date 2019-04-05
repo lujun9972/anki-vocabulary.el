@@ -1,0 +1,29 @@
+#+TITLE: README
+#+AUTHOR: lujun9972
+#+TAGS: pdf-anki-helper.el
+#+DATE: [2019-04-05 五 22:55]
+#+LANGUAGE:  zh-CN
+#+STARTUP:  inlineimages
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 配置
++ anki-helper-deck-name :: 单词存在哪个Deck中
++ anki-helper-model-=name :: card的model
++ anki-helper-field-alist :: 指定field的对应关系
++ M-x anki-helper-set-ankiconnect :: 帮助你设置上面三个参数
+* 使用方法
+1. 选中单词所在的句子作为上下文
+
+   + 在 =pdf-view-mode= 下必须手工选中单词所在的句子。
+
+   + 在其他模式下会尝试通过 =sentence-at-point= 和 =(thing-at-point 'line)= 来获取。
+
+2. 选择要翻译的单词
+
+   + 在 =pdf-view-mode= 下必须人工选择要翻译的单词
+
+   + 在其他模式下，会使用光标所在位置的单词作为待翻译的单词
+
+3. 执行 =anki-helper=
+   
+   该命令会显示 =句子的译文= 并让你选择 =单词的意义=, 然后通过 =AnkiConnect= 写入Anki
