@@ -61,13 +61,27 @@
 (defcustom anki-helper-before-addnote-functions nil
   "List of hook functions run before add note.
 
-The functions should accept those arguments:expression(单词) sentence(单词所在句子) translation(翻译的句子) glossary(单词释义) us-phonetic(单词发音)"
+The functions should accept those arguments:
++ expression(单词)
++ sentence(单词所在句子)
++ sentence_bold(单词所在句子,单词加粗)
++ translation(翻译的句子)
++ glossary(单词释义)
++ us-phonetic(美式发音)
++ uk-phonetic(英式发音)"
   :type 'hook)
 
 (defcustom anki-helper-after-addnote-functions nil
   "List of hook functions run after add note.
 
-The functions should accept those arguments:expression(单词) sentence(单词所在句子) translation(翻译的句子) glossary(单词释义) us-phonetic(单词发音)"
+The functions should accept those arguments:
++ expression(单词)
++ sentence(单词所在句子)
++ sentence_bold(单词所在句子,单词加粗)
++ translation(翻译的句子)
++ glossary(单词释义)
++ us-phonetic(美式发音)
++ uk-phonetic(英式发音)"
   :type 'hook)
 
 ;;;###autoload
@@ -81,7 +95,7 @@ The functions should accept those arguments:expression(单词) sentence(单词�
     (setq anki-helper-field-alist nil)
     (let* ((skip-field " ")
            (fields (cons skip-field (AnkiConnect-ModelFieldNames anki-helper-model-name))))
-      (dolist (element '(expression glossary sentence translation))
+      (dolist (element '(expression glossary us-phonetic uk-phonetic sentence sentence_bold translation))
         (let* ((prompt (format "%s" element))
                (field (completing-read prompt fields)))
           (unless (string= field skip-field)
@@ -117,20 +131,26 @@ The functions should accept those arguments:expression(单词) sentence(单词�
 (defun anki-helper--get-word ()
   (unless (derived-mode-p 'pdf-view-mode)
     (word-at-point)))
-
+(youdao-dictionary--request "try")
 ;;;###autoload
-(defun anki-helper (&optional sentence expression)
+(defun anki-helper (&optional sentence word)
   (interactive)
-  (let* ((sentence (or sentence (anki-helper--get-text)))           ; 原句
-         (expression (or expression (anki-helper--get-word) (anki-helper--select-word-in-string sentence))) ; 拼写
+  (let* ((sentence (or sentence (anki-helper--get-text))) ; 原句
+         (sentence_bold (replace-regexp-in-string (regexp-quote word)
+                                                  (lambda (word)
+                                                    (format "<b>%s</b>" word))
+                                                  sentence)) ; 粗体标记的句子
+         (word (or word (anki-helper--get-word) (anki-helper--select-word-in-string sentence)))
          (json (youdao-dictionary--request sentence))
          (translation (aref (assoc-default 'translation json) 0)) ; 翻译
-         (json (youdao-dictionary--request expression))
+         (json (youdao-dictionary--request word))
          (explains (youdao-dictionary--explains json))
          (basic (cdr (assoc 'basic json)))
+         (expression (cdr (assoc 'query json))) ; 拼写
          (prompt (format "%s(%s):" translation expression))
          (glossary (completing-read prompt (mapcar #'identity explains))) ; 释义
-         (us-phonetic (cdr (assoc 'us-phonetic basic)))                   ; 发音
+         (us-phonetic (cdr (assoc 'us-phonetic basic))) ; 美式发音
+         (uk-phonetic (cdr (assoc 'uk-phonetic basic))) ; 英式发音
          (fileds (mapcar #'car anki-helper-field-alist))
          (symbols (mapcar #'cdr anki-helper-field-alist))
          (values (mapcar #'symbol-value symbols))
