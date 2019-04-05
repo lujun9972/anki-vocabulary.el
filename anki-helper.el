@@ -131,7 +131,7 @@ The functions should accept those arguments:
 (defun anki-helper--get-word ()
   (unless (derived-mode-p 'pdf-view-mode)
     (word-at-point)))
-(youdao-dictionary--request "try")
+
 ;;;###autoload
 (defun anki-helper (&optional sentence word)
   (interactive)
