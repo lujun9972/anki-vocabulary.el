@@ -38,29 +38,7 @@
 
 (require 'pdf-view)
 (require 'youdao-dictionary)
-;; (require 'AnkiConnect)
-;; (defcustom pah-deck-name 'string
-;;   "Which deck would the word stored")
-;; (defcustom pah-model-name 'string
-;;   "Specify the model name")
-;; (defcustom pah-field-alist 'list
-;;   "指定field的对应关系")
-;; (defun pah-set-ankiconnect ()
-;;   ""
-;;   (interactive)
-;;   (let ((deck-names (AnkiConnect-DeckNames))
-;;         (model-names (AnkiConnect-ModelNames)))
-;;     (setq pah-deck-name (completing-read "Select the Deck Name:" deck-names))
-;;     (setq pah-model-name (completing-read "Select the Model Name:" model-names))
-;;     (setq pah-field-alist nil)
-;;     (let* ((skip-field " ")
-;;            (fields (cons skip-field (AnkiConnect-ModelFieldNames pah-model-name))))
-;;       (dolist (element '(expression reading glossary sentence translation))
-;;         (let* ((prompt (format "%s" element))
-;;                (field (completing-read prompt fields)))
-;;           (unless (string= field skip-field)
-;;             (setq fields (remove field fields))
-;;             (add-to-list 'pah-field-alist (cons field element))))))))
+(require 'AnkiConnect)
 
 (defgroup pdf-anki-helper nil
   ""
@@ -68,7 +46,47 @@
   :group 'tools
   :link '(url-link :tag "Github" "https://github.com/lujun9972/pdf-anki-helper.el"))
 
-(defvar pah-store-file "~/pdf-anki-helper.txt")
+(defcustom pah-deck-name ""
+  "Which deck would the word stored"
+  :type 'string)
+
+(defcustom pah-model-name ""
+  "Specify the model name"
+  :type 'string)
+
+(defcustom pah-field-alist nil
+  "指定field的对应关系"
+  :type 'string)
+
+(defcustom pah-before-addnote-functions nil
+  "List of hook functions run before add note.
+
+The functions should accept those arguments:expression(单词) sentence(单词所在句子) translation(翻译的句子) glossary(单词释义) us-phonetic(单词发音)"
+  :type 'hook)
+
+(defcustom pah-after-addnote-functions nil
+  "List of hook functions run after add note.
+
+The functions should accept those arguments:expression(单词) sentence(单词所在句子) translation(翻译的句子) glossary(单词释义) us-phonetic(单词发音)"
+  :type 'hook)
+
+;;;###autoload
+(defun pah-set-ankiconnect ()
+  ""
+  (interactive)
+  (let ((deck-names (AnkiConnect-DeckNames))
+        (model-names (AnkiConnect-ModelNames)))
+    (setq pah-deck-name (completing-read "Select the Deck Name:" deck-names))
+    (setq pah-model-name (completing-read "Select the Model Name:" model-names))
+    (setq pah-field-alist nil)
+    (let* ((skip-field " ")
+           (fields (cons skip-field (AnkiConnect-ModelFieldNames pah-model-name))))
+      (dolist (element '(expression glossary sentence translation))
+        (let* ((prompt (format "%s" element))
+               (field (completing-read prompt fields)))
+          (unless (string= field skip-field)
+            (setq fields (remove field fields))
+            (add-to-list 'pah-field-alist (cons field element))))))))
 
 (defun pah--get-active-region-text ()
   "Get the region text."
@@ -87,21 +105,20 @@
   (interactive)
   (let* ((sentence (pah--get-active-region-text))           ; 原句
          (expression (pah--select-word-in-string sentence)) ; 拼写
-         translation                                        ; 翻译
-         glossary                                           ; 释义
-         us-phonetic                                        ; 发音
-         )
-    (let* ((json (youdao-dictionary--request sentence)))
-      (setq translation (aref (assoc-default 'translation json) 0)))
-    (let* ((json (youdao-dictionary--request expression))
-           (explains (youdao-dictionary--explains json))
-           (basic (cdr (assoc 'basic json)))
-           (prompt (format "%s(%s):" translation expression)))
-      (setq glossary (completing-read prompt (mapcar #'identity explains)))
-      (setq us-phonetic (cdr (assoc 'us-phonetic basic))))
-    (with-temp-file pah-store-file
-      (when (file-readable-p pah-store-file)
-        (insert-file-contents pah-store-file))
-      (insert (string-join `(,sentence ,expression ,translation ,glossary ,us-phonetic) "|") "\n"))))
+         (json (youdao-dictionary--request sentence))
+         (translation (aref (assoc-default 'translation json) 0)) ; 翻译
+         (json (youdao-dictionary--request expression))
+         (explains (youdao-dictionary--explains json))
+         (basic (cdr (assoc 'basic json)))
+         (prompt (format "%s(%s):" translation expression))
+         (glossary (completing-read prompt (mapcar #'identity explains))) ; 释义
+         (us-phonetic (cdr (assoc 'us-phonetic basic)))                   ; 发音
+         (fileds (mapcar #'car pah-field-alist))
+         (symbols (mapcar #'cdr pah-field-alist))
+         (values (mapcar #'symbol-value symbols))
+         (card (cl-mapcar #'cons fileds values)))
+    (run-hook-with-args 'pah-before-addnote-functions expression sentence translation glossary us-phonetic)
+    (AnkiConnect-AddNote pah-deck-name pah-model-name card)
+    (run-hook-with-args 'pah-after-addnote-functions expression sentence translation glossary us-phonetic)))
 
 (provide 'pdf-anki-helper)
