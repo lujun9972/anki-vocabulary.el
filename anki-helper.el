@@ -136,11 +136,11 @@ The functions should accept those arguments:
 (defun anki-helper (&optional sentence word)
   (interactive)
   (let* ((sentence (or sentence (anki-helper--get-text))) ; 原句
+         (word (or word (anki-helper--get-word) (anki-helper--select-word-in-string sentence)))
          (sentence_bold (replace-regexp-in-string (regexp-quote word)
                                                   (lambda (word)
                                                     (format "<b>%s</b>" word))
                                                   sentence)) ; 粗体标记的句子
-         (word (or word (anki-helper--get-word) (anki-helper--select-word-in-string sentence)))
          (json (youdao-dictionary--request sentence))
          (translation (aref (assoc-default 'translation json) 0)) ; 翻译
          (json (youdao-dictionary--request word))
