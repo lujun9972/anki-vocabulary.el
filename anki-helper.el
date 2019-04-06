@@ -97,15 +97,16 @@ The functions should accept those arguments:
     (setq anki-helper-deck-name (completing-read "Select the Deck Name:" deck-names))
     (setq anki-helper-model-name (completing-read "Select the Model Name:" model-names))
     (setq anki-helper-field-alist nil)
-    (let* ((skip-field " ")
-           (fields (cons skip-field (AnkiConnect-ModelFieldNames anki-helper-model-name))))
-      (dolist (element '(expression glossary us-phonetic uk-phonetic sentence sentence_bold translation audio))
-        (let* ((prompt (format "%s" element))
-               (field (completing-read prompt fields)))
-          (unless (string= field skip-field)
-            (setq fields (remove field fields))
-            (if (equal 'audio element)
+    (setq anki-helper-audio-fileds nil)
+    (let* ((fields (AnkiConnect-ModelFieldNames anki-helper-model-name))
+           (elements '("${单词}" "${释义}" "${美式音标}" "${英式音标}" "${原文例句}" "${标粗的原文例句}" "${翻译例句}" "${发声}" "SKIP")))
+      (dolist (field fields)
+        (let* ((prompt (format "%s" field))
+               (element (completing-read prompt elements)))
+          (unless (string= element "SKIP")
+            (if (equal "${发声}" element)
                 (pushnew field anki-helper-audio-fileds)
+              (setq elements (remove element elements))
               (add-to-list 'anki-helper-field-alist (cons field element)))))))))
 
 (defun anki-helper--get-pdf-text ()
@@ -152,20 +153,30 @@ The functions should accept those arguments:
          (json (youdao-dictionary--request word))
          (explains (youdao-dictionary--explains json))
          (basic (cdr (assoc 'basic json)))
-         (expression (cdr (assoc 'query json))) ; 拼写
+         (expression (cdr (assoc 'query json))) ; 单词
          (prompt (format "%s(%s):" translation expression))
          (glossary (completing-read prompt (mapcar #'identity explains))) ; 释义
-         (us-phonetic (cdr (assoc 'us-phonetic basic))) ; 美式发音
-         (uk-phonetic (cdr (assoc 'uk-phonetic basic))) ; 英式发音
+         (us-phonetic (cdr (assoc 'us-phonetic basic))) ; 美式音标
+         (uk-phonetic (cdr (assoc 'uk-phonetic basic))) ; 英式音标
+         (audio-url (youdao-dictionary--format-voice-url word))
+         (audio-filename (format "youdao-%s.mp3" (md5 audio-url))) ;发声
+         (data `((单词 . ,expression)
+                 (释义 . ,glossary)
+                 (美式音标 . ,us-phonetic)
+                 (英式音标 . ,uk-phonetic)
+                 (原文例句 . ,sentence)
+                 (标粗的原文例句 . ,sentence_bold)
+                 (翻译例句 . ,translation)
+                 (发声 . ,(format "[sound:%s]" audio-filename))))
          (fileds (mapcar #'car anki-helper-field-alist))
-         (symbols (mapcar #'cdr anki-helper-field-alist))
-         (values (mapcar #'symbol-value symbols))
+         (elements (mapcar #'cdr anki-helper-field-alist))
+         (values (mapcar (lambda (e)
+                           (s-format e 'aget data))
+                         elements))
          (fields (cl-mapcar #'cons fileds values)))
     (run-hook-with-args 'anki-helper-before-addnote-functions expression sentence sentence_bold translation glossary us-phonetic uk-phonetic)
     (if anki-helper-audio-fileds
-        (let* ((audio-url (youdao-dictionary--format-voice-url word)) ; audio
-               (audio-filename (format "youdao-%s.mp3" (md5 audio-url)))
-               (audio-fileds (apply #'vector anki-helper-audio-fileds))
+        (let* ((audio-fileds (apply #'vector anki-helper-audio-fileds))
                (audio `(("url" . ,audio-url)
                         ("filename" . ,audio-filename)
                         ("fields" . ,audio-fileds))))
