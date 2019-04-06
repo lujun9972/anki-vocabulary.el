@@ -6,7 +6,7 @@
 ;; Keywords: lisp, anki, translator, chinese
 ;; Package: pdf-anki-helper
 ;; Version: 1.0
-;; Package-Requires: ((emacs "24.3") (youdao-dictionary "20180714") (AnkiConnect "1.0"))
+;; Package-Requires: ((emacs "24.3") (s "1.0") (youdao-dictionary "20180714") (AnkiConnect "1.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
