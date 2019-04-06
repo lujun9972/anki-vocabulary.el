@@ -137,7 +137,7 @@ The functions should accept those arguments:
   (interactive)
   (let* ((sentence (or sentence (anki-helper--get-text))) ; 原句
          (word (or word (anki-helper--get-word) (anki-helper--select-word-in-string sentence)))
-         (sentence_bold (replace-regexp-in-string (regexp-quote word)
+         (sentence_bold (replace-regexp-in-string (concat "\\b" (regexp-quote word) "\\b")
                                                   (lambda (word)
                                                     (format "<b>%s</b>" word))
                                                   sentence)) ; 粗体标记的句子
@@ -154,9 +154,13 @@ The functions should accept those arguments:
          (fileds (mapcar #'car anki-helper-field-alist))
          (symbols (mapcar #'cdr anki-helper-field-alist))
          (values (mapcar #'symbol-value symbols))
-         (card (cl-mapcar #'cons fileds values)))
-    (run-hook-with-args 'anki-helper-before-addnote-functions expression sentence translation glossary us-phonetic)
-    (AnkiConnect-AddNote anki-helper-deck-name anki-helper-model-name card)
-    (run-hook-with-args 'anki-helper-after-addnote-functions expression sentence translation glossary us-phonetic)))
+         (fields (cl-mapcar #'cons fileds values))
+         (audio-url (youdao-dictionary--format-voice-url word)) ; audio
+         (audio-filename (format "youdao-%s" (md5 audio-url)))
+         (audio `(("url" . ,audio-url)
+                  ("filename" . ,audio-filename))))
+    (run-hook-with-args 'anki-helper-before-addnote-functions expression sentence sentence_bold translation glossary us-phonetic uk-phonetic)
+    (AnkiConnect-AddNote anki-helper-deck-name anki-helper-model-name fields)
+    (run-hook-with-args 'anki-helper-after-addnote-functions expression sentence sentence_bold translation glossary us-phonetic uk-phonetic)))
 
 (provide 'anki-helper)
