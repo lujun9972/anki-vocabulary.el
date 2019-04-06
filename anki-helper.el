@@ -58,6 +58,10 @@
   "指定field的对应关系"
   :type 'string)
 
+(defcustom anki-helper-audio-fileds nil
+  "Specify fields used to store audio"
+  :type 'list)
+
 (defcustom anki-helper-before-addnote-functions nil
   "List of hook functions run before add note.
 
@@ -95,12 +99,14 @@ The functions should accept those arguments:
     (setq anki-helper-field-alist nil)
     (let* ((skip-field " ")
            (fields (cons skip-field (AnkiConnect-ModelFieldNames anki-helper-model-name))))
-      (dolist (element '(expression glossary us-phonetic uk-phonetic sentence sentence_bold translation))
+      (dolist (element '(expression glossary us-phonetic uk-phonetic sentence sentence_bold translation audio))
         (let* ((prompt (format "%s" element))
                (field (completing-read prompt fields)))
           (unless (string= field skip-field)
             (setq fields (remove field fields))
-            (add-to-list 'anki-helper-field-alist (cons field element))))))))
+            (if (equal 'audio element)
+                (pushnew field anki-helper-audio-fileds)
+              (add-to-list 'anki-helper-field-alist (cons field element)))))))))
 
 (defun anki-helper--get-pdf-text ()
   "Get the text in pdf mode."
@@ -154,13 +160,19 @@ The functions should accept those arguments:
          (fileds (mapcar #'car anki-helper-field-alist))
          (symbols (mapcar #'cdr anki-helper-field-alist))
          (values (mapcar #'symbol-value symbols))
-         (fields (cl-mapcar #'cons fileds values))
-         (audio-url (youdao-dictionary--format-voice-url word)) ; audio
-         (audio-filename (format "youdao-%s" (md5 audio-url)))
-         (audio `(("url" . ,audio-url)
-                  ("filename" . ,audio-filename))))
+         (fields (cl-mapcar #'cons fileds values)))
     (run-hook-with-args 'anki-helper-before-addnote-functions expression sentence sentence_bold translation glossary us-phonetic uk-phonetic)
-    (AnkiConnect-AddNote anki-helper-deck-name anki-helper-model-name fields)
+    (if anki-helper-audio-fileds
+        (let* ((audio-url (youdao-dictionary--format-voice-url word)) ; audio
+               (audio-filename (format "youdao-%s.mp3" (md5 audio-url)))
+               (audio-fileds (apply #'vector anki-helper-audio-fileds))
+               (audio `(("url" . ,audio-url)
+                        ("filename" . ,audio-filename)
+                        ("fields" . ,audio-fileds))))
+          (AnkiConnect-AddNote anki-helper-deck-name anki-helper-model-name fields audio))
+      (AnkiConnect-AddNote anki-helper-deck-name anki-helper-model-name fields))
     (run-hook-with-args 'anki-helper-after-addnote-functions expression sentence sentence_bold translation glossary us-phonetic uk-phonetic)))
 
 (provide 'anki-helper)
+
+;;; anki-helper.el ends here
