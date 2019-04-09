@@ -176,7 +176,11 @@ The functions should accept those arguments:
          (fields (cl-mapcar #'cons fileds values)))
     (run-hook-with-args 'anki-helper-before-addnote-functions expression sentence sentence_bold translation glossary us-phonetic uk-phonetic)
     (if anki-helper-audio-fileds
-        (let* ((audio-fileds (apply #'vector anki-helper-audio-fileds))
+        (let* ((audio-fileds (cond ((listp anki-helper-audio-fileds)
+                                    (apply #'vector anki-helper-audio-fileds))
+                                   ((stringp anki-helper-audio-fileds)
+                                    (vector anki-helper-audio-fileds))
+                                   (t [])))
                (audio `(("url" . ,audio-url)
                         ("filename" . ,audio-filename)
                         ("fields" . ,audio-fileds))))
