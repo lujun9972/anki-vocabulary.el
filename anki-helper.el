@@ -152,12 +152,15 @@ The functions should accept those arguments:
          (translation (aref (assoc-default 'translation json) 0)) ; 翻译
          (json (youdao-dictionary--request word))
          (explains (youdao-dictionary--explains json))
-         (basic (cdr (assoc 'basic json)))
+         (basic (or (cdr (assoc 'basic json))
+                    ""))
          (expression (cdr (assoc 'query json))) ; 单词
          (prompt (format "%s(%s):" translation expression))
          (glossary (completing-read prompt (mapcar #'identity explains))) ; 释义
-         (us-phonetic (cdr (assoc 'us-phonetic basic))) ; 美式音标
-         (uk-phonetic (cdr (assoc 'uk-phonetic basic))) ; 英式音标
+         (us-phonetic (or (cdr (assoc 'us-phonetic basic))
+                          "")) ; 美式音标
+         (uk-phonetic (or (cdr (assoc 'uk-phonetic basic))
+                          "")) ; 英式音标
          (audio-url (youdao-dictionary--format-voice-url word))
          (audio-filename (format "youdao-%s.mp3" (md5 audio-url))) ;发声
          (data `((单词 . ,expression)
