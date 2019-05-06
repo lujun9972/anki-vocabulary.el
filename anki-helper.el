@@ -130,10 +130,10 @@ The functions should accept those arguments:
       (anki-helper--get-pdf-text)
     (anki-helper--get-normal-text)))
 
-(defun anki-helper--select-word-in-string (str)
+(defun anki-helper--select-word-in-string (str &optional default-word)
   "Select word in `STR'."
   (let ((words (split-string str "[ \f\t\n\r\v,.:?;\"<>]+")))
-    (completing-read "请选择单词: " words)))
+    (completing-read "请选择单词: " words nil nil default-word)))
 
 (defun anki-helper--get-word ()
   (unless (derived-mode-p 'pdf-view-mode)
@@ -143,7 +143,7 @@ The functions should accept those arguments:
 (defun anki-helper (&optional sentence word)
   (interactive)
   (let* ((sentence (or sentence (anki-helper--get-text))) ; 原句
-         (word (or word (anki-helper--get-word) (anki-helper--select-word-in-string sentence)))
+         (word (or word  (anki-helper--select-word-in-string sentence (anki-helper--get-word))))
          (sentence_bold (replace-regexp-in-string (concat "\\b" (regexp-quote word) "\\b")
                                                   (lambda (word)
                                                     (format "<b>%s</b>" word))
