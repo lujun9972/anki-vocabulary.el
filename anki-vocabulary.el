@@ -142,6 +142,19 @@ Optional argument DEFAULT-WORD specify the defauld word."
   (unless (derived-mode-p 'pdf-view-mode)
     (word-at-point)))
 
+(defun anki-vocabulary--format-meanings (explain)
+  "Format the explain to meanings list."
+  (let* ((tag (car (split-string explain "\\. ")))
+         (meanings (cadr (split-string explain "\\. "))))
+    (if meanings                    ;有些explain中不带词性说明，这时就不会有". "分隔符了
+        (setq tag (concat tag ". "))
+      (setq meanings tag)
+      (setq tag ""))
+    (setq meanings (split-string meanings "；"))
+    (mapcar (lambda (meaning)
+              (format "%s%s" tag meaning))
+            meanings)))
+
 ;;;###autoload
 (defun anki-vocabulary (&optional sentence word)
   "Translate SENTENCE and WORD, and then create an anki card."
@@ -156,15 +169,16 @@ Optional argument DEFAULT-WORD specify the defauld word."
          (translation (aref (assoc-default 'translation json) 0)) ; 翻译
          (json (youdao-dictionary--request word))
          (explains (youdao-dictionary--explains json))
+         (explains (mapcan #'anki-vocabulary--format-meanings explains))
          (basic (or (cdr (assoc 'basic json))
                     ""))
          (expression (cdr (assoc 'query json))) ; 单词
          (prompt (format "%s(%s):" translation expression))
-         (glossary (completing-read prompt (mapcar #'identity explains))) ; 释义
+         (glossary (completing-read prompt explains)) ; 释义
          (us-phonetic (or (cdr (assoc 'us-phonetic basic))
-                          "")) ; 美式音标
+                          ""))          ; 美式音标
          (uk-phonetic (or (cdr (assoc 'uk-phonetic basic))
-                          "")) ; 英式音标
+                          ""))          ; 英式音标
          (audio-url (youdao-dictionary--format-voice-url word))
          (audio-filename (format "youdao-%s.mp3" (md5 audio-url))) ;发声
          (data `((单词 . ,expression)
