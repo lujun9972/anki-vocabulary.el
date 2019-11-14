@@ -170,11 +170,19 @@ Optional argument DEFAULT-WORD specify the defauld word."
          (json (youdao-dictionary--request word))
          (explains (youdao-dictionary--explains json))
          (explains (mapcan #'anki-vocabulary--format-meanings explains))
+         (web (assoc-default 'web json)) ;array
+         (web-explains (mapcar
+                        (lambda (k-v)
+                          (format "- %s :: %s"
+                                  (assoc-default 'key k-v)
+                                  (mapconcat 'identity (assoc-default 'value k-v) "; ")))
+                        web))
          (basic (or (cdr (assoc 'basic json))
                     ""))
          (expression (cdr (assoc 'query json))) ; 单词
          (prompt (format "%s(%s):" translation expression))
-         (glossary (completing-read prompt explains)) ; 释义
+         (glossary (completing-read prompt (or explains
+                                               web-explains))) ; 释义
          (us-phonetic (or (cdr (assoc 'us-phonetic basic))
                           ""))          ; 美式音标
          (uk-phonetic (or (cdr (assoc 'uk-phonetic basic))
