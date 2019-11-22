@@ -6,7 +6,7 @@
 ;; Keywords: lisp, anki, translator, chinese
 ;; Package: anki-vocabulary
 ;; Version: 1.0
-;; Package-Requires: ((emacs "24.4") (s "1.0") (youdao-dictionary "0.4") (AnkiConnect "1.0"))
+;; Package-Requires: ((emacs "24.4") (s "1.0") (youdao-dictionary "0.4") (anki-connect "1.0"))
 ;; URL: http://github.com/lujun9972/anki-vocabulary.el
 
 ;; This file is NOT part of GNU Emacs.
@@ -39,7 +39,7 @@
 
 (require 'pdf-view)
 (require 'youdao-dictionary)
-(require 'AnkiConnect)
+(require 'anki-connect)
 
 (defgroup anki-vocabulary nil
   ""
@@ -93,13 +93,13 @@ The functions should accept those arguments:
 (defun anki-vocabulary-set-ankiconnect ()
   "Set the correspondence relation of anki card."
   (interactive)
-  (let ((deck-names (AnkiConnect-DeckNames))
-        (model-names (AnkiConnect-ModelNames)))
+  (let ((deck-names (anki-connect-deck-names))
+        (model-names (anki-connect-model-names)))
     (setq anki-vocabulary-deck-name (completing-read "Select the Deck Name:" deck-names))
     (setq anki-vocabulary-model-name (completing-read "Select the Model Name:" model-names))
     (setq anki-vocabulary-field-alist nil)
     (setq anki-vocabulary-audio-fileds nil)
-    (let* ((fields (AnkiConnect-ModelFieldNames anki-vocabulary-model-name))
+    (let* ((fields (anki-connect-model-field-names anki-vocabulary-model-name))
            (elements '("${单词}" "${释义}" "${美式音标}" "${英式音标}" "${原文例句}" "${标粗的原文例句}" "${翻译例句}" "${发声}" "SKIP")))
       (dolist (field fields)
         (let* ((prompt (format "%s" field))
@@ -213,8 +213,8 @@ Optional argument DEFAULT-WORD specify the defauld word."
                (audio `(("url" . ,audio-url)
                         ("filename" . ,audio-filename)
                         ("fields" . ,audio-fileds))))
-          (AnkiConnect-AddNote anki-vocabulary-deck-name anki-vocabulary-model-name fields audio))
-      (AnkiConnect-AddNote anki-vocabulary-deck-name anki-vocabulary-model-name fields))
+          (anki-connect-add-note anki-vocabulary-deck-name anki-vocabulary-model-name fields audio))
+      (anki-connect-add-note anki-vocabulary-deck-name anki-vocabulary-model-name fields))
     (run-hook-with-args 'anki-vocabulary-after-addnote-functions expression sentence sentence_bold translation glossary us-phonetic uk-phonetic)))
 
 (provide 'anki-vocabulary)
