@@ -32,7 +32,8 @@
 ;;; Commentary:
 
 ;; anki-vocabulary is a plugin that help you to create vocabulary card in Anki
-;; Just select the sentence then execute =M-x anki-vocabulary=
+;; First of all, execute =M-x anki-vocabulary-set-ankiconnect= to set the correspondence relation for fields in card.
+;; Then,select the sentence and execute =M-x anki-vocabulary=
 
 
 ;;; Code:
@@ -45,7 +46,7 @@
   ""
   :prefix "anki-vocabulary"
   :group 'tools
-  :link '(url-link :tag "Github" "https://github.com/lujun9972/pdf-anki-vocabulary.el"))
+  :link '(url-link :tag "Github" "https://github.com/lujun9972/anki-vocabulary.el"))
 
 (defcustom anki-vocabulary-deck-name ""
   "Which deck would the word stored."
@@ -56,7 +57,7 @@
   :type 'string)
 
 (defcustom anki-vocabulary-field-alist nil
-  "指定field的对应关系."
+  "Specify the corresponding relationship for fields in card."
   :type 'string)
 
 (defcustom anki-vocabulary-audio-fileds nil
@@ -91,7 +92,7 @@ The functions should accept those arguments:
 
 ;;;###autoload
 (defun anki-vocabulary-set-ankiconnect ()
-  "Set the correspondence relation of anki card."
+  "Set the correspondence relation for fields in card."
   (interactive)
   (let ((deck-names (anki-connect-deck-names))
         (model-names (anki-connect-model-names)))
@@ -143,7 +144,7 @@ Optional argument DEFAULT-WORD specify the defauld word."
     (word-at-point)))
 
 (defun anki-vocabulary--format-meanings (explain)
-  "Format the explain to meanings list."
+  "Format the `EXPLAIN' to meanings list."
   (let* ((tag (car (split-string explain "\\. ")))
          (meanings (cadr (split-string explain "\\. "))))
     (if meanings                    ;有些explain中不带词性说明，这时就不会有". "分隔符了
