@@ -1,4 +1,4 @@
-;;; anki-vocabulary.el --- Help you to create vocabulary card in Anki
+;;; anki-vocabulary.el --- Help you to create vocabulary cards in Anki
 
 ;; Copyright (C) 2019-2019 DarkSun <lujun9972@gmail.com>.
 
@@ -31,7 +31,7 @@
 
 ;;; Commentary:
 
-;; anki-vocabulary is a plugin that help you to create vocabulary card in Anki
+;; anki-vocabulary is a plugin that helps you to create vocabulary cards in Anki
 ;; First of all, execute =M-x anki-vocabulary-set-ankiconnect= to set the correspondence relation for fields in card.
 ;; Then,select the sentence and execute =M-x anki-vocabulary=
 
