@@ -210,7 +210,7 @@ It returns an alist like
                                                   sentence)) ; 粗体标记的句子
          (json (youdao-dictionary--request sentence))
          (translation (aref (assoc-default 'translation json) 0)) ; 翻译
-         (content (anki-vocabulary--word-searcher-youdao word))
+         (content (funcall anki-vocabulary-word-searcher word))
          (expression (or (cdr (assoc 'expression content))
                          "")) ; 单词
          (prompt (format "%s(%s):" translation expression))
