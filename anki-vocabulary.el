@@ -143,18 +143,60 @@ Optional argument DEFAULT-WORD specify the defauld word."
   (unless (derived-mode-p 'pdf-view-mode)
     (word-at-point)))
 
-(defun anki-vocabulary--format-meanings (explain)
-  "Format the `EXPLAIN' to meanings list."
-  (let* ((tag (car (split-string explain "\\. ")))
-         (meanings (cadr (split-string explain "\\. "))))
-    (if meanings                    ;有些explain中不带词性说明，这时就不会有". "分隔符了
-        (setq tag (concat tag ". "))
-      (setq meanings tag)
-      (setq tag ""))
-    (setq meanings (split-string meanings "；"))
-    (mapcar (lambda (meaning)
-              (format "%s%s" tag meaning))
-            meanings)))
+(defcustom anki-vocabulary-word-searcher #'anki-vocabulary--word-searcher-youdao
+  "Function used to search word's meanning.
+
+The function should return an alist like
+    `((expression . ,expression)
+      (glossary . ,glossary)
+      (us-phonetic . ,us-phonetic)
+      (uk-phonetic . ,uk-phonetic))"
+  :type 'function)
+
+(defun anki-vocabulary--word-searcher-youdao (word)
+  "Search `WORD' using youdao.
+
+It returns an alist like
+    `((expression . ,expression)
+      (glossary . ,glossary)
+      (us-phonetic . ,us-phonetic)
+      (uk-phonetic . ,uk-phonetic))"
+  (let* ((json (youdao-dictionary--request word))
+         (explains (youdao-dictionary--explains json))
+         (format-meanings-function (lambda (explain)
+                                     "Format the `EXPLAIN' to meanings list."
+                                     (let* ((tag (car (split-string explain "\\. ")))
+                                            (meanings (cadr (split-string explain "\\. "))))
+                                       (if meanings ;有些explain中不带词性说明，这时就不会有". "分隔符了
+                                           (setq tag (concat tag ". "))
+                                         (setq meanings tag)
+                                         (setq tag ""))
+                                       (setq meanings (split-string meanings "；"))
+                                       (mapcar (lambda (meaning)
+                                                 (format "%s%s" tag meaning))
+                                               meanings))))
+         (explains (mapcan format-meanings-function explains))
+         (web (assoc-default 'web json)) ;array
+         (web-explains (mapcar
+                        (lambda (k-v)
+                          (format "- %s :: %s"
+                                  (assoc-default 'key k-v)
+                                  (mapconcat 'identity (assoc-default 'value k-v) "; ")))
+                        web))
+         (basic (or (cdr (assoc 'basic json))
+                    ""))
+         (expression (cdr (assoc 'query json)))
+         (glossary (or explains
+                       web-explains))
+         (us-phonetic (or (cdr (assoc 'us-phonetic basic))
+                          ""))          ; 美式音标
+         (uk-phonetic (or (cdr (assoc 'uk-phonetic basic))
+                          ""))          ; 英式音标
+         )
+    `((expression . ,expression)
+      (glossary . ,glossary)
+      (us-phonetic . ,us-phonetic)
+      (uk-phonetic . ,uk-phonetic))))
 
 ;;;###autoload
 (defun anki-vocabulary (&optional sentence word)
@@ -168,25 +210,16 @@ Optional argument DEFAULT-WORD specify the defauld word."
                                                   sentence)) ; 粗体标记的句子
          (json (youdao-dictionary--request sentence))
          (translation (aref (assoc-default 'translation json) 0)) ; 翻译
-         (json (youdao-dictionary--request word))
-         (explains (youdao-dictionary--explains json))
-         (explains (mapcan #'anki-vocabulary--format-meanings explains))
-         (web (assoc-default 'web json)) ;array
-         (web-explains (mapcar
-                        (lambda (k-v)
-                          (format "- %s :: %s"
-                                  (assoc-default 'key k-v)
-                                  (mapconcat 'identity (assoc-default 'value k-v) "; ")))
-                        web))
-         (basic (or (cdr (assoc 'basic json))
-                    ""))
-         (expression (cdr (assoc 'query json))) ; 单词
+         (content (anki-vocabulary--word-searcher-youdao word))
+         (expression (or (cdr (assoc 'expression content))
+                         "")) ; 单词
          (prompt (format "%s(%s):" translation expression))
-         (glossary (completing-read prompt (or explains
-                                               web-explains))) ; 释义
-         (us-phonetic (or (cdr (assoc 'us-phonetic basic))
+         (glossary (or (cdr (assoc 'glossary content))
+                       ""))
+         (glossary (completing-read prompt glossary)) ; 释义
+         (us-phonetic (or (cdr (assoc 'us-phonetic content))
                           ""))          ; 美式音标
-         (uk-phonetic (or (cdr (assoc 'uk-phonetic basic))
+         (uk-phonetic (or (cdr (assoc 'uk-phonetic content))
                           ""))          ; 英式音标
          (audio-url (youdao-dictionary--format-voice-url word))
          (audio-filename (format "youdao-%s.mp3" (md5 audio-url))) ;发声
