@@ -183,8 +183,7 @@ It returns an alist like
                                   (assoc-default 'key k-v)
                                   (mapconcat 'identity (assoc-default 'value k-v) "; ")))
                         web))
-         (basic (or (cdr (assoc 'basic json))
-                    ""))
+         (basic (cdr (assoc 'basic json)))
          (expression (cdr (assoc 'query json)))
          (glossary (or explains
                        web-explains))
