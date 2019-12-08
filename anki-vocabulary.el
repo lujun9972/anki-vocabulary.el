@@ -6,7 +6,7 @@
 ;; Keywords: lisp, anki, translator, chinese
 ;; Package: anki-vocabulary
 ;; Version: 1.0
-;; Package-Requires: ((emacs "24.4") (s "1.0") (youdao-dictionary "0.4") (anki-connect "1.0") (pdf-tools "1.0"))
+;; Package-Requires: ((emacs "24.4") (s "1.0") (youdao-dictionary "0.4") (anki-connect "1.0"))
 ;; URL: http://github.com/lujun9972/anki-vocabulary.el
 
 ;; This file is NOT part of GNU Emacs.
@@ -38,7 +38,6 @@
 
 ;;; Code:
 
-(require 'pdf-view)
 (require 'youdao-dictionary)
 (require 'anki-connect)
 
@@ -111,12 +110,13 @@ The functions should accept those arguments:
               (setq elements (remove element elements))
               (add-to-list 'anki-vocabulary-field-alist (cons field element)))))))))
 
-(defun anki-vocabulary--get-pdf-text ()
-  "Get the text in pdf mode."
-  (pdf-view-assert-active-region)
-  (let* ((txt (pdf-view-active-region-text))
-         (txt (string-join txt "\n")))
-    (replace-regexp-in-string "[\r\n]+" " " txt)))
+(when (featurep 'pdf-view)
+  (defun anki-vocabulary--get-pdf-text ()
+    "Get the text in pdf mode."
+    (pdf-view-assert-active-region)
+    (let* ((txt (pdf-view-active-region-text))
+           (txt (string-join txt "\n")))
+      (replace-regexp-in-string "[\r\n]+" " " txt))))
 
 (defun anki-vocabulary--get-normal-text ()
   "Get the text in normal mode."
