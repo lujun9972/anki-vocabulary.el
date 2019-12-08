@@ -152,6 +152,12 @@ The function should return an alist like
       (phonetic . ,phonetic))"
   :type 'function)
 
+(defcustom anki-vocabulary-sentence-translator #'anki-vocabulary--sentence-translator-youdao
+  "Function used to translate sentence.
+
+The function should return the translation in a string."
+  :type 'function)
+
 (defun anki-vocabulary--word-searcher-youdao (word)
   "Search `WORD' using youdao.
 
@@ -195,6 +201,11 @@ It returns an alist like
       (glossary . ,glossary)
       (phonetic . ,phonetic))))
 
+(defun anki-vocabulary--sentence-translator-youdao (sentence)
+  "Translate `SENTENCE' using youdao"
+  (let ((json (youdao-dictionary--request sentence))
+        (aref (assoc-default 'translation json) 0))))
+
 ;;;###autoload
 (defun anki-vocabulary (&optional sentence word)
   "Translate SENTENCE and WORD, and then create an anki card."
@@ -205,17 +216,16 @@ It returns an alist like
                                                   (lambda (word)
                                                     (format "<b>%s</b>" word))
                                                   sentence)) ; 粗体标记的句子
-         (json (youdao-dictionary--request sentence))
-         (translation (aref (assoc-default 'translation json) 0)) ; 翻译
+         (translation (funcall anki-vocabulary-sentence-translator sentence)) ; 翻译
          (content (funcall anki-vocabulary-word-searcher word))
          (expression (or (cdr (assoc 'expression content))
-                         "")) ; 单词
+                         ""))           ; 单词
          (prompt (format "%s(%s):" translation expression))
          (glossary (or (cdr (assoc 'glossary content))
                        ""))
          (glossary (completing-read prompt glossary)) ; 释义
          (phonetic (or (cdr (assoc 'phonetic content))
-                          ""))          ; 音标
+                       ""))             ; 音标
          (audio-url (youdao-dictionary--format-voice-url expression))
          (audio-filename (format "youdao-%s.mp3" (md5 audio-url))) ;发声
          (data `((expression:单词 . ,expression)
