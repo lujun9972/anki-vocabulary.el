@@ -6,7 +6,7 @@
 ;; Keywords: lisp, anki, translator, chinese
 ;; Package: anki-vocabulary
 ;; Version: 1.0
-;; Package-Requires: ((emacs "24.4") (s "1.0") (youdao-dictionary "0.4") (anki-connect "1.0"))
+;; Package-Requires: ((emacs "24.4") (s "1.0") (youdao-dictionary "0.4") (anki-connect "1.0") (s "1.10"))
 ;; URL: http://github.com/lujun9972/anki-vocabulary.el
 
 ;; This file is NOT part of GNU Emacs.
@@ -38,6 +38,8 @@
 
 ;;; Code:
 
+(require 's)
+(require 'cl-lib)
 (require 'youdao-dictionary)
 (require 'anki-connect)
 
@@ -72,8 +74,7 @@ The functions should accept those arguments:
 + sentence_bold(单词所在句子,单词加粗)
 + translation(翻译的句子)
 + glossary(单词释义)
-+ us-phonetic(美式发音)
-+ uk-phonetic(英式发音)"
++ phonetic(音标)"
   :type 'hook)
 
 (defcustom anki-vocabulary-after-addnote-functions nil
@@ -85,8 +86,7 @@ The functions should accept those arguments:
 + sentence_bold(单词所在句子,单词加粗)
 + translation(翻译的句子)
 + glossary(单词释义)
-+ us-phonetic(美式发音)
-+ uk-phonetic(英式发音)"
++ phonetic(音标)"
   :type 'hook)
 
 ;;;###autoload
@@ -100,12 +100,12 @@ The functions should accept those arguments:
     (setq anki-vocabulary-field-alist nil)
     (setq anki-vocabulary-audio-fileds nil)
     (let* ((fields (anki-connect-model-field-names anki-vocabulary-model-name))
-           (elements '("${单词}" "${释义}" "${美式音标}" "${英式音标}" "${原文例句}" "${标粗的原文例句}" "${翻译例句}" "${发声}" "SKIP")))
+           (elements '("${expression:单词}" "${glossary:释义}" "${phonetic:音标}" "${sentence:原文例句}" "${sentence_bold:标粗的原文例句}" "${translation:翻译例句}" "${sound:发声}" "SKIP")))
       (dolist (field fields)
         (let* ((prompt (format "%s" field))
                (element (completing-read prompt elements)))
           (unless (string= element "SKIP")
-            (if (equal "${发声}" element)
+            (if (equal "${sound:发声}" element)
                 (pushnew field anki-vocabulary-audio-fileds)
               (setq elements (remove element elements))
               (add-to-list 'anki-vocabulary-field-alist (cons field element)))))))))
@@ -135,8 +135,8 @@ The functions should accept those arguments:
 (defun anki-vocabulary--select-word-in-string (str &optional default-word)
   "Select word in `STR'.
 Optional argument DEFAULT-WORD specify the defauld word."
-  (let ((words (split-string str "[ \f\t\n\r\v,.:?;\"<>]+")))
-    (completing-read "请选择单词: " words nil nil default-word)))
+  (let ((words (split-string str "[ \f\t\n\r\v,.:?;\"<>()]+")))
+    (completing-read "Pick The Word: " words nil nil default-word)))
 
 (defun anki-vocabulary--get-word ()
   "Get the word at point."
@@ -149,8 +149,7 @@ Optional argument DEFAULT-WORD specify the defauld word."
 The function should return an alist like
     `((expression . ,expression)
       (glossary . ,glossary)
-      (us-phonetic . ,us-phonetic)
-      (uk-phonetic . ,uk-phonetic))"
+      (phonetic . ,phonetic))"
   :type 'function)
 
 (defun anki-vocabulary--word-searcher-youdao (word)
@@ -159,9 +158,9 @@ The function should return an alist like
 It returns an alist like
     `((expression . ,expression)
       (glossary . ,glossary)
-      (us-phonetic . ,us-phonetic)
-      (uk-phonetic . ,uk-phonetic))"
+      (phonetic . ,phonetic))"
   (let* ((json (youdao-dictionary--request word))
+         (translation (mapcar #'identity (assoc-default 'translation json)))
          (explains (youdao-dictionary--explains json))
          (format-meanings-function (lambda (explain)
                                      "Format the `EXPLAIN' to meanings list."
@@ -186,16 +185,15 @@ It returns an alist like
          (basic (cdr (assoc 'basic json)))
          (expression (cdr (assoc 'query json)))
          (glossary (or explains
-                       web-explains))
-         (us-phonetic (or (cdr (assoc 'us-phonetic basic))
-                          ""))          ; 美式音标
-         (uk-phonetic (or (cdr (assoc 'uk-phonetic basic))
-                          ""))          ; 英式音标
+                       web-explains
+                       translation))
+         (phonetic (or (cdr (assoc 'phonetic basic))
+                       (cdr (assoc 'us-phonetic basic))
+                       (cdr (assoc 'uk-phonetic basic))))          ; 音标
          )
     `((expression . ,expression)
       (glossary . ,glossary)
-      (us-phonetic . ,us-phonetic)
-      (uk-phonetic . ,uk-phonetic))))
+      (phonetic . ,phonetic))))
 
 ;;;###autoload
 (defun anki-vocabulary (&optional sentence word)
@@ -216,27 +214,24 @@ It returns an alist like
          (glossary (or (cdr (assoc 'glossary content))
                        ""))
          (glossary (completing-read prompt glossary)) ; 释义
-         (us-phonetic (or (cdr (assoc 'us-phonetic content))
-                          ""))          ; 美式音标
-         (uk-phonetic (or (cdr (assoc 'uk-phonetic content))
-                          ""))          ; 英式音标
-         (audio-url (youdao-dictionary--format-voice-url word))
+         (phonetic (or (cdr (assoc 'phonetic content))
+                          ""))          ; 音标
+         (audio-url (youdao-dictionary--format-voice-url expression))
          (audio-filename (format "youdao-%s.mp3" (md5 audio-url))) ;发声
-         (data `((单词 . ,expression)
-                 (释义 . ,glossary)
-                 (美式音标 . ,us-phonetic)
-                 (英式音标 . ,uk-phonetic)
-                 (原文例句 . ,sentence)
-                 (标粗的原文例句 . ,sentence_bold)
-                 (翻译例句 . ,translation)
-                 (发声 . ,(format "[sound:%s]" audio-filename))))
+         (data `((expression:单词 . ,expression)
+                 (glossary:释义 . ,glossary)
+                 (phonetic:音标 . ,phonetic)
+                 (sentece:原文例句 . ,sentence)
+                 (sentence_bold:标粗的原文例句 . ,sentence_bold)
+                 (translation:翻译例句 . ,translation)
+                 (sound:发声 . ,(format "[sound:%s]" audio-filename))))
          (fileds (mapcar #'car anki-vocabulary-field-alist))
          (elements (mapcar #'cdr anki-vocabulary-field-alist))
          (values (mapcar (lambda (e)
                            (s-format e 'aget data))
                          elements))
          (fields (cl-mapcar #'cons fileds values)))
-    (run-hook-with-args 'anki-vocabulary-before-addnote-functions expression sentence sentence_bold translation glossary us-phonetic uk-phonetic)
+    (run-hook-with-args 'anki-vocabulary-before-addnote-functions expression sentence sentence_bold translation glossary phonetic)
     (if anki-vocabulary-audio-fileds
         (let* ((audio-fileds (cond ((listp anki-vocabulary-audio-fileds)
                                     (apply #'vector anki-vocabulary-audio-fileds))
@@ -248,7 +243,7 @@ It returns an alist like
                         ("fields" . ,audio-fileds))))
           (anki-connect-add-note anki-vocabulary-deck-name anki-vocabulary-model-name fields audio))
       (anki-connect-add-note anki-vocabulary-deck-name anki-vocabulary-model-name fields))
-    (run-hook-with-args 'anki-vocabulary-after-addnote-functions expression sentence sentence_bold translation glossary us-phonetic uk-phonetic)))
+    (run-hook-with-args 'anki-vocabulary-after-addnote-functions expression sentence sentence_bold translation glossary phonetic)))
 
 (provide 'anki-vocabulary)
 
