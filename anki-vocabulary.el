@@ -6,7 +6,7 @@
 ;; Keywords: lisp, anki, translator, chinese
 ;; Package: anki-vocabulary
 ;; Version: 1.0
-;; Package-Requires: ((emacs "24.4") (s "1.0") (youdao-dictionary "0.4") (anki-connect "1.0"))
+;; Package-Requires: ((emacs "24.4") (s "1.0") (youdao-dictionary "0.4") (anki-connect "1.0") (pdf-tools "1.0"))
 ;; URL: http://github.com/lujun9972/anki-vocabulary.el
 
 ;; This file is NOT part of GNU Emacs.
