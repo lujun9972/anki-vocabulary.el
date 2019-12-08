@@ -6,24 +6,184 @@
 #+STARTUP:  inlineimages
 #+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
 
-* 配置
-+ anki-vocabulary-deck-name :: 单词存在哪个Deck中
-+ anki-vocabulary-model-=name :: card的model
-+ anki-vocabulary-field-alist :: 指定field的对应关系
-+ M-x anki-vocabulary-set-ankiconnect :: 帮助你设置上面三个参数
-* 使用方法
-1. 选中单词所在的句子作为上下文
+* Customization
++ anki-vocabulary-deck-name :: Specify the Deck used to store the vocabulary card
++ anki-vocabulary-model-name :: Specify the model of vocabulary card
++ anki-vocabulary-field-alist :: Specify the meaning of fields in the model
+   + expression :: the vocabulary
+   + sentence :: the context of vocabulary
+   + sentence_bold :: the context with vocabulary bold
+   + translation :: translated context
+   + glossary :: meaning of vocabulary
+   + phonetic :: the phonetic symbol
++ M-x anki-vocabulary-set-ankiconnect :: Help you settle arguments above
+* Usage
+1. Select the sentence in which the word is in as the context.
 
-   + 在 =pdf-view-mode= 下必须手工选中单词所在的句子。
+   + If the buffer mode is =pdf-view-mode=, you have to mark the context manually.
 
-   + 在其他模式下会尝试通过 =sentence-at-point= 和 =(thing-at-point 'line)= 来获取。
+   + In other modes, It gets context by =sentence-at-point= and =(thing-at-point 'line)=.
 
-2. 选择要翻译的单词
+2. =M-x anki-vocabulary=
 
-   + 在 =pdf-view-mode= 下必须人工选择要翻译的单词
-
-   + 在其他模式下，会使用光标所在位置的单词作为待翻译的单词
-
-3. 执行 =anki-vocabulary=
+3. Pick the vocabulary
    
-   该命令会显示 =句子的译文= 并让你选择 =单词的意义=, 然后通过 =AnkiConnect= 写入Anki
+   It will display the =translation of context(if avaible)= and shows you =vocabulary meanings=
+
+4. Pick the correct meaning in the context
+
+   It will create the card automatically
+* Specify the original language and target language
+** Using Youdao Service
+This package use Youdao API (thanks to [[https://github.com/xuchunyang/youdao-dictionary.el][youdao-dictionary.el]]) to do the translation.
+
+According to the [[http://ai.youdao.com/DOCSIRMA/html/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E7%BF%BB%E8%AF%91/API%E6%96%87%E6%A1%A3/%E6%96%87%E6%9C%AC%E7%BF%BB%E8%AF%91%E6%9C%8D%E5%8A%A1/%E6%96%87%E6%9C%AC%E7%BF%BB%E8%AF%91%E6%9C%8D%E5%8A%A1-API%E6%96%87%E6%A1%A3.html#section-9][API Documentation]],It will identify Chinese, English, Japanese, Korean, French, Spanish, Portuguese, Russian, Vietnamese, German, Arabic, Indonesian and Italian automatically.
+
+But you can also Specify the original language and target language with following steps.
+
+1. you should [[https://ai.youdao.com/register.s][register a Youdao account]] and create an application to get an =appKey= and a =secret-key= (see [[https://ai.youdao.com/doc.s#guide][the guide(in Chinese)]]).
+2. set the =youdao-dictionary-app-key= to the value of =appKey=
+3. set the =youdao-dictionary-secret-key= to the value of =secret-key=
+4. set the =youdao-dictionary-from= to the code of original language
+5. set the =youdao-dictionary-to= to the code of target language
+
+| The language             | code      |
+| Chinese                  | zh-CHS    |
+| English                  | en        |
+| Japanese                 | ja        |
+| Korean                   | ko        |
+| French                   | fr        |
+| Spanish                  | Es        |
+| Portuguese               | pt        |
+| Italian                  | it        |
+| Russian                  | ru        |
+| Vietnamese               | vi        |
+| German                   | DE        |
+| Arabic                   | ar        |
+| Indonesian               | id        |
+| Afrikaans                | af        |
+| Bosnian                  | bs        |
+| Bulgarian                | bg        |
+| Cantonese                | make      |
+| Catalan                  | ca        |
+| Croatian                 | hr        |
+| Czech                    | cs        |
+| Danish                   | da        |
+| Dutch                    | nl        |
+| Estonian                 | et        |
+| Fijian                   | fj        |
+| Finnish                  | fi        |
+| Greek                    | el        |
+| Haitian                  | Creole ht |
+| Hebrew                   | he        |
+| Hindi                    | hi        |
+| White hmong              | mwW       |
+| Hungarian                | hu        |
+| Swahili                  | sw        |
+| Klingon                  | tlh       |
+| Latvian                  | lv        |
+| Lithuanian               | lt        |
+| Malay                    | ms        |
+| Maltese                  | mt        |
+| Norwegian                | no        |
+| Persian                  | fa        |
+| Polish                   | pl        |
+| Queretaro                | otq       |
+| Romanian                 | ro        |
+| Serbian (Cyrillic)       | sr-Cyrl   |
+| Serbian (Latin)          | sr-Latn   |
+| Slovak                   | sk        |
+| Slovenian                | sl        |
+| Swedish                  | sv        |
+| Tahitian                 | ty        |
+| Thai                     | th        |
+| Tongan                   | to        |
+| Turkish                  | tr        |
+| Ukrainian                | uk        |
+| Urdu                     | ur        |
+| Welsh                    | cy        |
+| Yucatan Maya             | yua       |
+| Albanian                 | sq        |
+| Amharic                  | am        |
+| Armenian                 | hy        |
+| azeri                    | az        |
+| Bengali                  | bn        |
+| Basque                   | eu        |
+| Belarusian               | be        |
+| Cebu language            | ceb       |
+| Corsican                 | co        |
+| Esperanto                | eo        |
+| Filipino                 | tl        |
+| Frisian                  | fy        |
+| Galician                 | gl        |
+| Georgian                 | ka        |
+| Gujarat                  | gu        |
+| Hausa                    | ha        |
+| Hawaiian                 | haw       |
+| Icelandic                | is        |
+| Ibo                      | ig        |
+| Irish                    | ga        |
+| Javanese                 | jw        |
+| Kannada                  | kn        |
+| Kazakh                   | kk        |
+| Khmer                    | km        |
+| Kurdish                  | ku        |
+| Kirgiz                   | ky        |
+| Lao                      | lo        |
+| Latin                    | la        |
+| Luxembourg               | lb        |
+| Macedonian               | mk        |
+| Malgash                  | mg        |
+| Malayalam                | ml        |
+| Maori                    | mi        |
+| Marathi                  | mr        |
+| Mongolian                | mn        |
+| Burmese                  | my        |
+| Nepali                   | ne        |
+| Zichewa                  | ny        |
+| Pashto                   | ps        |
+| Punjabi                  | pa        |
+| Samoan                   | sm        |
+| Scottish Gaelic          | gd        |
+| The sesotho language     | st        |
+| Shona                    | sn        |
+| Sindhi                   | sd        |
+| Sinhala                  | si        |
+| Somali                   | so        |
+| The sunda                | su        |
+| Tajik                    | tg        |
+| Tamil                    | ta        |
+| telugu                   | Te        |
+| Uzbek                    | uz        |
+| Xhosa                    | xh        |
+| Yiddish                  | yi        |
+| yoruba                   | yo        |
+| South African zulu       | zu        |
+| Automatic identification | auto      |
+
+For example, if you want to translate French to English, you can do the following customization:
+#+begin_src emacs-lisp
+  (setq youdao-dictionary-app-key "xxxxxxxxxxxxxxx")
+  (setq youdao-dictionary-secret-key "yyyyyyyyyyyyyyy")
+  (setq youdao-dictionary-from "fr")
+  (setq youdao-dictionary-to "en")
+  ;;. Bonjour, je m’appelle Geo et je viens de Chine.
+#+end_src
+
+[[file:demo1.gif]]
+
+** Using other translation services
+You can define your own function to fetch the meanings of vocabulary and translation of the context.
+
+The function used to get meanings of vocabulary should accept the vocabulary as the argument and return an alist like
+#+begin_src emacs-lisp
+  `((expression . ,vocabulary-string)
+    (glossary . ,meaning-of-vocabulary-list)
+    (phonetic . ,phonetic-string))"
+#+end_src
+
+The function used to translate the context should accept the context and the only argument and return the translation in a string.
+
+Then set the =anki-vocabulary-word-searcher= to the function that get meanings of vocabulary.
+
+Set the =anki-vocabulary-sentence-translator= to the function that get the meaning of context.
