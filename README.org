@@ -178,12 +178,12 @@ You can define your own function to fetch the meanings of vocabulary and transla
 The function used to get meanings of vocabulary should accept the vocabulary as the argument and return an alist like
 #+begin_src emacs-lisp
   `((expression . ,vocabulary-string)
-    (glossary . ,meaning-of-vocabulary-list)
+    (glossary . ,meanings-of-vocabulary-list)
     (phonetic . ,phonetic-string))"
 #+end_src
 
-The function used to translate the context should accept the context and the only argument and return the translation in a string.
+The function used to translate the context should accept the context as the only argument and return the translation in a string.
 
 Then set the =anki-vocabulary-word-searcher= to the function that get meanings of vocabulary.
 
-Set the =anki-vocabulary-sentence-translator= to the function that get the meaning of context.
+Set the =anki-vocabulary-sentence-translator= to the function that get the translation of context.
