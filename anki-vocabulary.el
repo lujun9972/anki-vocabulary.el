@@ -203,8 +203,8 @@ It returns an alist like
 
 (defun anki-vocabulary--sentence-translator-youdao (sentence)
   "Translate `SENTENCE' using youdao"
-  (let ((json (youdao-dictionary--request sentence))
-        (aref (assoc-default 'translation json) 0))))
+  (let ((json (youdao-dictionary--request sentence)))
+    (aref (assoc-default 'translation json) 0)))
 
 ;;;###autoload
 (defun anki-vocabulary (&optional sentence word)
