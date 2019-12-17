@@ -42,6 +42,9 @@
 (require 'cl-lib)
 (require 'youdao-dictionary)
 (require 'anki-connect)
+(declare-function pdf-view-active-region-text "pdf-view" ())
+(declare-function pdf-view-assert-active-region "pdf-view" ())
+
 
 (defgroup anki-vocabulary nil
   ""
