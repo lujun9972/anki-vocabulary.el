@@ -205,7 +205,7 @@ It returns an alist like
       (phonetic . ,phonetic))))
 
 (defun anki-vocabulary--sentence-translator-youdao (sentence)
-  "Translate `SENTENCE' using youdao"
+  "Translate `SENTENCE' using youdao."
   (let ((json (youdao-dictionary--request sentence)))
     (aref (assoc-default 'translation json) 0)))
 
