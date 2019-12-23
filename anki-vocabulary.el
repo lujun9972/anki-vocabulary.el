@@ -7,7 +7,7 @@
 ;; Package: anki-vocabulary
 ;; Version: 1.0
 ;; Package-Requires: ((emacs "24.4") (s "1.0") (youdao-dictionary "0.4") (anki-connect "1.0") (s "1.10"))
-;; URL: http://github.com/lujun9972/anki-vocabulary.el
+;; URL: https://github.com/lujun9972/anki-vocabulary.el
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -22,12 +22,12 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Source code
 ;;
 ;; anki-vocabulary's code can be found here:
-;;   http://github.com/lujun9972/anki-vocabulary.el
+;;   https://github.com/lujun9972/anki-vocabulary.el
 
 ;;; Commentary:
 
@@ -42,8 +42,8 @@
 (require 'cl-lib)
 (require 'youdao-dictionary)
 (require 'anki-connect)
-(declare-function pdf-view-active-region-text "pdf-view" ())
-(declare-function pdf-view-assert-active-region "pdf-view" ())
+(declare-function pdf-view-active-region-text "ext:pdf-view" ())
+(declare-function pdf-view-assert-active-region "ext:pdf-view" ())
 
 
 (defgroup anki-vocabulary nil
@@ -109,17 +109,9 @@ The functions should accept those arguments:
                (element (completing-read prompt elements)))
           (unless (string= element "SKIP")
             (if (equal "${sound:发声}" element)
-                (pushnew field anki-vocabulary-audio-fileds)
+                (cl-pushnew field anki-vocabulary-audio-fileds)
               (setq elements (remove element elements))
               (add-to-list 'anki-vocabulary-field-alist (cons field element)))))))))
-
-(when (featurep 'pdf-view)
-  (defun anki-vocabulary--get-pdf-text ()
-    "Get the text in pdf mode."
-    (pdf-view-assert-active-region)
-    (let* ((txt (pdf-view-active-region-text))
-           (txt (string-join txt "\n")))
-      (replace-regexp-in-string "[\r\n]+" " " txt))))
 
 (defun anki-vocabulary--get-normal-text ()
   "Get the text in normal mode."
@@ -129,11 +121,23 @@ The functions should accept those arguments:
                    (thing-at-point 'line)))))
     (replace-regexp-in-string "[\r\n]+" " " txt)))
 
+(with-eval-after-load 'pdf-view
+  (defun anki-vocabulary--get-pdf-text ()
+    "Get the text in pdf mode."
+    (pdf-view-assert-active-region)
+    (let* ((txt (pdf-view-active-region-text))
+           (txt (string-join txt "\n")))
+      (replace-regexp-in-string "[\r\n]+" " " txt)))
+  (defun anki-vocabulary--get-text ()
+    "Get the region text."
+    (if (derived-mode-p 'pdf-view-mode)
+        (anki-vocabulary--get-pdf-text)
+      (anki-vocabulary--get-normal-text))))
+
+
 (defun anki-vocabulary--get-text ()
   "Get the region text."
-  (if (derived-mode-p 'pdf-view-mode)
-      (anki-vocabulary--get-pdf-text)
-    (anki-vocabulary--get-normal-text)))
+  (anki-vocabulary--get-normal-text))
 
 (defun anki-vocabulary--select-word-in-string (str &optional default-word)
   "Select word in `STR'.
@@ -189,7 +193,7 @@ It returns an alist like
                         (lambda (k-v)
                           (format "- %s :: %s"
                                   (assoc-default 'key k-v)
-                                  (mapconcat 'identity (assoc-default 'value k-v) "; ")))
+                                  (mapconcat #'identity (assoc-default 'value k-v) "; ")))
                         web))
          (basic (cdr (assoc 'basic json)))
          (expression (cdr (assoc 'query json)))
