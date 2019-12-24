@@ -43,7 +43,7 @@
 (require 'youdao-dictionary)
 (require 'anki-connect)
 (declare-function pdf-view-active-region-text "ext:pdf-view" ())
-(declare-function pdf-view-assert-active-region "ext:pdf-view" ())
+(declare-function pdf-view-assert-active-region "ext:pdf-view" () t)
 
 
 (defgroup anki-vocabulary nil
@@ -121,23 +121,21 @@ The functions should accept those arguments:
                    (thing-at-point 'line)))))
     (replace-regexp-in-string "[\r\n]+" " " txt)))
 
-(with-eval-after-load 'pdf-view
-  (defun anki-vocabulary--get-pdf-text ()
-    "Get the text in pdf mode."
-    (pdf-view-assert-active-region)
-    (let* ((txt (pdf-view-active-region-text))
-           (txt (string-join txt "\n")))
-      (replace-regexp-in-string "[\r\n]+" " " txt)))
-  (defun anki-vocabulary--get-text ()
-    "Get the region text."
-    (if (derived-mode-p 'pdf-view-mode)
-        (anki-vocabulary--get-pdf-text)
-      (anki-vocabulary--get-normal-text))))
-
+(defun anki-vocabulary--get-pdf-text ()
+  "Get the text in pdf mode."
+  (if (package-installed-p 'pdf-tools)
+      (require 'pdf-view)
+    (error "pdf-tools is required!"))
+  (pdf-view-assert-active-region)
+  (let* ((txt (pdf-view-active-region-text))
+         (txt (string-join txt "\n")))
+    (replace-regexp-in-string "[\r\n]+" " " txt)))
 
 (defun anki-vocabulary--get-text ()
   "Get the region text."
-  (anki-vocabulary--get-normal-text))
+  (if (derived-mode-p 'pdf-view-mode)
+      (anki-vocabulary--get-pdf-text)
+    (anki-vocabulary--get-normal-text)))
 
 (defun anki-vocabulary--select-word-in-string (str &optional default-word)
   "Select word in `STR'.
