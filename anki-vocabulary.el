@@ -123,9 +123,9 @@ The functions should accept those arguments:
 
 (defun anki-vocabulary--get-pdf-text ()
   "Get the text in pdf mode."
-  (if (package-installed-p 'pdf-tools)
-      (require 'pdf-view)
-    (error "`pdf-tools` is required!"))
+  ;; (if (package-installed-p 'pdf-tools)
+  ;;     (require 'pdf-view)
+  ;;   (error "`pdf-tools` is required!"))
   (pdf-view-assert-active-region)
   (let* ((txt (pdf-view-active-region-text))
          (txt (string-join txt "\n")))
