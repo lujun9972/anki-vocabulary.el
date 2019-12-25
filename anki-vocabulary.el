@@ -138,8 +138,8 @@ The functions should accept those arguments:
     (anki-vocabulary--get-normal-text)))
 
 (defun anki-vocabulary--select-word-in-string (str &optional default-word)
-  "Select word in `STR'.
-Optional argument DEFAULT-WORD specify the defauld word."
+  "Select word in STR.
+Optional argument DEFAULT-WORD specify the default word."
   (let ((words (split-string str "[ \f\t\n\r\v,.:?;\"<>()]+")))
     (completing-read "Pick The Word: " words nil nil default-word)))
 
@@ -149,7 +149,7 @@ Optional argument DEFAULT-WORD specify the defauld word."
     (word-at-point)))
 
 (defcustom anki-vocabulary-word-searcher #'anki-vocabulary--word-searcher-youdao
-  "Function used to search word's meanning.
+  "Function used to search word's meaning.
 
 The function should return an alist like
     `((expression . ,expression)
@@ -164,7 +164,7 @@ The function should return the translation in a string."
   :type 'function)
 
 (defun anki-vocabulary--word-searcher-youdao (word)
-  "Search `WORD' using youdao.
+  "Search WORD using youdao.
 
 It returns an alist like
     `((expression . ,expression)
@@ -174,7 +174,7 @@ It returns an alist like
          (translation (mapcar #'identity (assoc-default 'translation json)))
          (explains (youdao-dictionary--explains json))
          (format-meanings-function (lambda (explain)
-                                     "Format the `EXPLAIN' to meanings list."
+                                     "Format the EXPLAIN to meanings list."
                                      (let* ((tag (car (split-string explain "\\. ")))
                                             (meanings (cadr (split-string explain "\\. "))))
                                        (if meanings ;有些explain中不带词性说明，这时就不会有". "分隔符了
@@ -207,7 +207,7 @@ It returns an alist like
       (phonetic . ,phonetic))))
 
 (defun anki-vocabulary--sentence-translator-youdao (sentence)
-  "Translate `SENTENCE' using youdao."
+  "Translate SENTENCE using youdao."
   (let ((json (youdao-dictionary--request sentence)))
     (aref (assoc-default 'translation json) 0)))
 
@@ -236,7 +236,7 @@ It returns an alist like
          (data `((expression:单词 . ,expression)
                  (glossary:释义 . ,glossary)
                  (phonetic:音标 . ,phonetic)
-                 (sentece:原文例句 . ,sentence)
+                 (sentence:原文例句 . ,sentence)
                  (sentence_bold:标粗的原文例句 . ,sentence_bold)
                  (translation:翻译例句 . ,translation)
                  (sound:发声 . ,(format "[sound:%s]" audio-filename))))
