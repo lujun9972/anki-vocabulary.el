@@ -40,6 +40,7 @@
 
 (require 's)
 (require 'cl-lib)
+(require 'subr-x)
 (require 'youdao-dictionary)
 (require 'anki-connect)
 (declare-function pdf-view-active-region-text "ext:pdf-view" ())
