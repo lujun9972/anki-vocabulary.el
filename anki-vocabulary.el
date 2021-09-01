@@ -44,7 +44,7 @@
 (require 'youdao-dictionary)
 (require 'anki-connect)
 (declare-function pdf-view-active-region-text "ext:pdf-view" ())
-(declare-function pdf-view-assert-active-region "ext:pdf-view" () t)
+(declare-function pdf-view-assert-active-region "ext:pdf-view" ())
 
 
 (defgroup anki-vocabulary nil
